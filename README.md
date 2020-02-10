@@ -40,6 +40,12 @@ Here are some feature ideas that could be created to make this addon better. If 
 
 - **Merge rendered parts into the final image inside Blender.** I've already started this on the code side, but the merging function does not work properly yet... A feature I started working on: `def merge_image_parts(context):` There is also [a post about this](https://stackoverflow.com/questions/60142233/saving-numpy-array-to-image-shrinks-image-parts-to-wrong-size) problem initiated by me in StackOverflow.
 
+## Installation
+
+ 1. Download the [latest release](https://github.com/Creatide/RenderFarts/raw/master/RenderFarts.zip)
+ 2. In Blender open up *User Preferences > Addons*
+ 3. Click *Install from File*, select `RenderFarts.zip` and activate the Add-on
+
 ## Collaboration & Feedback
 
 On my day to day job, I'm a visual guy, but in my free time, I like to spend some time with code. I'm not super experienced in this area, so all of the bits of advice and improvement suggestions are more than welcome!
