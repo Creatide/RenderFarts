@@ -1,5 +1,9 @@
 # RenderFarts - Blender Add-on
 
+<p align="center">
+  <img src="https://drive.google.com/uc?export=view&id=1FpJSK9d2FWlco_k_I08bwjKbRO1Y8stJ" width="100%" title="RenderFarts Logo">
+</p>
+
 ### About
 
 What if you could **render images in parts, on multiple computers, stop rendering and then continue** even if you've shut down your beautiful machines? This is something I've longed for a really long time for 3D programs...
