@@ -1,5 +1,9 @@
 # RenderFarts - Blender Add-on
 
+<p align="center">
+  <img src="https://i.imgur.com/SziMKaZ.gif" width="100%" title="RenderFarts Logo">
+</p>
+
 ### About
 
 What if you could **render images in parts, on multiple computers, stop rendering and then continue** even if you've shut down your beautiful machines? This is something I've longed for a really long time for 3D programs...
@@ -14,9 +18,17 @@ Why it's called **RenderFarts**? The very first prototype was called **RenderPar
 
 ### Stop and Continue Rendering
 
+<p align="center">
+  <img src="https://i.imgur.com/OjVgSkv.gif" width="100%" title="RenderFarts Logo">
+</p>
+
 This was mainly the reason why I created RenderFarts add-on. It saves tiles to separate files so you just continue from there where you left whenever you want. Just remember to use the exact same file and rendering location and you'll be fine.
 
 ### Render With Multiple Computers
+
+<p align="center">
+  <img src="https://i.imgur.com/ktHGjhE.gif" width="100%" title="RenderFarts Logo">
+</p>
 
 The second best reason for me to use RenderFart is being able to render using multiple computers. I've used some render farms and managers, but many of them are a hassle to set up for simple still images for personal use. For animations and bigger projects, those are all wonderful choices.
 
