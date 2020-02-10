@@ -415,28 +415,34 @@ class RF_OT_StartRender(Operator):
                     self.remove_handlers(context, event)
                     return {"FINISHED"} 
                 
-                # Setup active chunk and filepath
-                chunk = render_parts[0]
-                filepath = os.path.join(scene.render_settings.render_folder, chunk.name)
-                rndr.filepath = filepath 
+                try:
+                    # Setup active chunk and filepath
+                    chunk = render_parts[0]
+                    filepath = os.path.join(scene.render_settings.render_folder, chunk.name)
+                    rndr.filepath = filepath 
 
-                # Setup border sizes
-                rndr.border_min_x = chunk.border_min_x
-                rndr.border_max_x = chunk.border_max_x
-                rndr.border_min_y = chunk.border_min_y
-                rndr.border_max_y = chunk.border_max_y 
+                    # Setup border sizes
+                    rndr.border_min_x = chunk.border_min_x
+                    rndr.border_max_x = chunk.border_max_x
+                    rndr.border_min_y = chunk.border_min_y
+                    rndr.border_max_y = chunk.border_max_y 
 
-                rndr.use_border = True
-                rndr.use_crop_to_border = scene.render_settings.crop_border 
-                    
-                if scene.render_settings.show_render_window is True:
-                    # TODO: Render image skips last dummy image while render window is active.
-                    #RF_Utils.create_dummy_image(chunk.name, rndr.image_settings.file_format, filepath)
-                    bpy.ops.render.render("INVOKE_DEFAULT", write_still=True)
-                else:
-                    # Create small dummy image before rendering to prevent multiple renderings                    
-                    RF_Utils.create_dummy_image(chunk.name, rndr.image_settings.file_format, filepath)
-                    bpy.ops.render.render(write_still=True)
+                    rndr.use_border = True
+                    rndr.use_crop_to_border = scene.render_settings.crop_border                 
+                
+                    if scene.render_settings.show_render_window is True:
+                        # TODO: Render image skips last dummy image while render window is active.
+                        #RF_Utils.create_dummy_image(chunk.name, rndr.image_settings.file_format, filepath)
+                        bpy.ops.render.render("INVOKE_DEFAULT", write_still=True)
+                    else:
+                        # Create small dummy image before rendering to prevent multiple renderings                    
+                        RF_Utils.create_dummy_image(chunk.name, rndr.image_settings.file_format, filepath)
+                        bpy.ops.render.render(write_still=True)
+
+                except Exception as e:
+                    excepName = type(e).__name__
+                    RF_Utils.show_message_box(str(e)[:-1], "Render Failed", "ERROR")
+                    return {"FINISHED"} 
 
         return {"PASS_THROUGH"}
 
@@ -451,7 +457,7 @@ class RF_OT_StopRender(Operator):
     # Disable/enable button
     @classmethod
     def poll(self, context):
-        return context.scene.render_settings.all_parts_rendered is False
+        return context.scene.render_settings.all_parts_rendered is False and context.scene.render_settings.rendered_parts_count > 0
     
     def execute(self, context):
         scene = context.scene
