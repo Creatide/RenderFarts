@@ -75,6 +75,15 @@ class RF_Utils():
         for att in dir(obj):
             print (att, getattr(obj,att))
 
+    def flat_list(l, iteration=1):
+        flattened_list = l
+        try:
+            for i in range(iteration):
+                flattened_list = [y for x in flattened_list for y in x]
+            return flattened_list
+        except Exception as e:
+            print(e)
+
     # Valid file name by parsing out illegal / invalid chars
     def validate_filename(name):  # could reuse for other presets
         for char in " !@#$%^&*(){}:\";'[]<>,.\\/?":
@@ -165,10 +174,6 @@ class RF_Utils():
     # Merge all image parts to final image
     def merge_image_parts(context):
 
-        # Disable merge process for cropped version because it's not work properly
-        if context.scene.render_settings.crop_border is True:
-            return None
-
         scene = context.scene
         rndr = scene.render
         
@@ -181,47 +186,73 @@ class RF_Utils():
         parts_count = scene.render_settings.parts_count
         total_parts_count = scene.render_settings.total_parts_count = parts_count * parts_count
 
-        # Render settings
-        final_image_name = 'FINAL_EPIC_' + scene.render_settings.filename_prefix + rndr.file_extension
-        final_image_filepath = os.path.join(scene.render_settings.render_folder, final_image_name)
-        final_resolution_multiplier = rndr.resolution_percentage / 100
-        final_image_width = rndr.resolution_x * final_resolution_multiplier
-        final_image_height = rndr.resolution_y * final_resolution_multiplier
-        part_width = int(round(final_image_width / parts_count))
-        part_height = int(round(final_image_height / parts_count))
-
-        image_pixel_count = final_image_width * final_image_height
-        output_image = bpy.data.images.new(final_image_name, alpha=True, width=final_image_width, height=final_image_height)
-        final_image_pixels = 0
-        image_pixels = []
-
         # Read all images to array of images in pixels
         if rendered_images:
-            for image in rendered_images:
+
+            # Render settings
+            final_image_name = 'FINAL_EPIC_' + scene.render_settings.filename_prefix + rndr.file_extension
+            final_image_filepath = os.path.join(scene.render_settings.render_folder, final_image_name)
+            final_resolution_multiplier = rndr.resolution_percentage / 100
+            final_image_width = int(rndr.resolution_x * final_resolution_multiplier)
+            final_image_height = int(rndr.resolution_y * final_resolution_multiplier)
+            part_width = int(round(final_image_width / parts_count))
+            part_height = int(round(final_image_height / parts_count))
+
+            image_pixel_count = int(final_image_width * final_image_height)
+            part_pixel_count = int(image_pixel_count / total_parts_count)
+
+            # Empty arrays for every pixel
+            final_image_pixels = [None] * part_pixel_count * total_parts_count         
+            # final_image_pixels = []       
+            image_pixels = []        
+
+            # Parse out numbers from names
+            # name_numbers = []
+            # for image in rendered_images:
+            #     num = image.split('.')[0]
+            #     name_numbers.append([num.split('_')[1], num.split('_')[2]])
+                            
+            # Order rendered part names to row-major order
+            rendered_images_ordered = []            
+            for y in range(parts_count, 0, -1):
+                for x in range(parts_count):
+                    rendered_images_ordered.append(rendered_images[(y-1)+(x*parts_count)])
+
+            # Get all pixels from image parts
+            for image in rendered_images_ordered:
                 filepath = os.path.join(scene.render_settings.render_folder, image)
                 filepath = os.path.realpath(bpy.path.abspath(filepath))
-                loaded_pixels = bpy.data.images.load(filepath, check_existing=True).pixels
-                loaded_pixels = np.array(loaded_pixels)
-                #loaded_pixels = loaded_pixels.astype(np.float32)
-                image_pixels.append(loaded_pixels[:])
-                
-        # Convert images pixel list to numpy arrays
-        np_array = np.array(image_pixels)
+                loaded_pixels = list(bpy.data.images.load(filepath, check_existing=True).pixels)
+                # image_pixels.append(loaded_pixels[:])
+                image_pixels.append([loaded_pixels[ipx:ipx+4] for ipx in range(0, len(loaded_pixels), 4)])
+
+            # Create final image pixels by loopin all image parts pixels
+            for i in range(len(image_pixels)):
+                for x in range(part_width):
+                    for y in range(part_height):
+                        # TODO: Not sure if this ordering pixels properly to final image. Output is mess still.
+                        px_index = (x + y * part_width) + (i * (part_width * part_height))
+                        final_image_pixels[px_index] = image_pixels[i][y]   
+                        # final_image_pixels.append(image_pixels[i][y])         
+
+            #final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
+
+            # DEBUG: Create text file from data
+            # for line in final_image_pixels:
+            #     print(line, file=open("D:\\" + final_image_name + "_pixels.txt", "a"))
+
+            # print(len(final_image_pixels))
+            # final_image_pixels = np.array(final_image_pixels)
 
         # Check if there is enoug pixel images in array
-        if len(image_pixels) == total_parts_count and len(np_array) == total_parts_count:
+        if len(final_image_pixels) == image_pixel_count:
 
             try:
-                if scene.render_settings.crop_border:
-                    final_image_pixels = np_array
-                else:
-                    for arr in np_array:
-                        final_image_pixels += arr
-            
                 # Save output image
                 output_image = bpy.data.images.new(final_image_name, alpha=True, width=final_image_width, height=final_image_height)
                 output_image.alpha_mode = 'STRAIGHT'
-                output_image.pixels = final_image_pixels.ravel()
+                # output_image.pixels = bytes([int(pix*255) for pix in final_image_pixels])
+                # output_image.pixels = final_image_pixels.ravel()
                 output_image.filepath_raw = final_image_filepath
                 output_image.file_format = scene.render.image_settings.file_format
                 output_image.save()          
@@ -233,6 +264,7 @@ class RF_Utils():
             except Exception as e:
                 excepName = type(e).__name__
                 RF_Utils.show_message_box("Cannot merge images properly: " + excepName, "Merge Failed", "ERROR")
+                print(e)
 
     # Show pop-up message window for user
     def show_message_box(message = "", title = "Message", icon = 'INFO'):
@@ -520,10 +552,12 @@ class RF_OT_MergeImages(Operator):
     bl_idname = "rp.merge_images"
     bl_description = "Merge Images to One Image After ALL Parts is Rendered. Works only when images not rendered with Crop to Render Region feature"
 
+    '''
     # Disable button for cropped version because it's not work properly yet
     @classmethod
     def poll(self, context):
-        return context.scene.render_settings.crop_border is False and context.scene.render_settings.all_parts_rendered is True
+        return context.scene.render_settings.all_parts_rendered is True
+    '''
     
     def execute(self, context):
         scene = context.scene
@@ -600,6 +634,7 @@ class RF_PT_Panel (Panel):
         row.scale_y = 1.5
         box.operator("rp.merge_images", icon="FILE_IMAGE")
         '''
+        
         row = layout.row()
         row.alignment = 'RIGHT'
         row.label(text=bl_info['name'] + ' - ' + str(bl_info['version']).strip('()'))
