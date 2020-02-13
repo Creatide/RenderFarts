@@ -108,6 +108,8 @@ class RF_Utils():
         path = os.path.realpath(bpy.path.abspath(path))
         render_files = []
         for root, dirs, files in os.walk(path):
+            # Limit file scan only to selected directory
+            del dirs[:] 
             for file in files:
                 if (file.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))):
                     if file_extension is not True:
