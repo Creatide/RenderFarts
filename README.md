@@ -38,7 +38,7 @@ Just remember to use the same blend file with the same settings and the same fol
 
 Here are some feature ideas that could be created to make this addon better. If you're a developer and have got some ninja moves, just fork and be a master Jedi.
 
-- **Merge rendered parts into the final image inside Blender.** I've already started this on the code side, but the merging function does not work properly yet... A feature I started working on: `def merge_image_parts(context):` There is also [a post about this](https://stackoverflow.com/questions/60142233/saving-numpy-array-to-image-shrinks-image-parts-to-wrong-size) problem initiated by me in StackOverflow.
+- **Merge rendered parts into the final image inside Blender.** I've already started this on the code side, but the merging function does not work properly yet... [A feature I started working on: `def merge_image_parts(context):`](https://github.com/Creatide/RenderFarts/blob/aa153e8641580b9110c6dc698bfc4a093e6bb108/src/__init__.py#L175). There is also [a post about this](https://blender.stackexchange.com/questions/166285/how-to-merge-external-images-together-in-script) problem initiated by me in https://blender.stackexchange.com/.
 
 ## Installation
 
