@@ -202,8 +202,8 @@ class RF_Utils():
             part_pixel_count = int(image_pixel_count / total_parts_count)
 
             # Empty arrays for every pixel
-            final_image_pixels = [None] * part_pixel_count * total_parts_count         
-            # final_image_pixels = []       
+            # final_image_pixels = [None] * part_pixel_count * total_parts_count         
+            final_image_pixels = []       
             image_pixels = []        
 
             # Parse out numbers from names
@@ -232,20 +232,20 @@ class RF_Utils():
                     for y in range(part_height):
                         # TODO: Not sure if this ordering pixels properly to final image. Output is mess still.
                         px_index = (x + y * part_width) + (i * (part_width * part_height))
-                        final_image_pixels[px_index] = image_pixels[i][y]   
-                        # final_image_pixels.append(image_pixels[i][y])         
+                        # final_image_pixels[px_index] = image_pixels[i][y]   
+                        final_image_pixels.append(image_pixels[i][y])         
 
-            #final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
+            # Flatten needed levels from array
+            # final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
 
             # DEBUG: Create text file from data
             # for line in final_image_pixels:
-            #     print(line, file=open("D:\\" + final_image_name + "_pixels.txt", "a"))
+            #     print(line, file=open("D:\\" + bl_info['name'] + "_Final_Image_Pixels.txt", "a"))
 
-            # print(len(final_image_pixels))
             # final_image_pixels = np.array(final_image_pixels)
 
         # Check if there is enoug pixel images in array
-        if len(final_image_pixels) == image_pixel_count:
+        # if len(final_image_pixels) == image_pixel_count or len(final_image_pixels) == image_pixel_count * 4:
 
             try:
                 # Save output image
@@ -253,6 +253,7 @@ class RF_Utils():
                 output_image.alpha_mode = 'STRAIGHT'
                 # output_image.pixels = bytes([int(pix*255) for pix in final_image_pixels])
                 # output_image.pixels = final_image_pixels.ravel()
+                output_image.pixels = final_image_pixels
                 output_image.filepath_raw = final_image_filepath
                 output_image.file_format = scene.render.image_settings.file_format
                 output_image.save()          
