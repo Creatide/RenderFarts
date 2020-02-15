@@ -220,30 +220,51 @@ class RF_Utils():
                 for x in range(parts_count):
                     rendered_images_ordered.append(rendered_images[(y-1)+(x*parts_count)])
 
+            # rendered_images_ordered.reverse()
+
             # Get all pixels from image parts
             for image in rendered_images_ordered:
                 filepath = os.path.join(scene.render_settings.render_folder, image)
                 filepath = os.path.realpath(bpy.path.abspath(filepath))
-                loaded_pixels = list(bpy.data.images.load(filepath, check_existing=True).pixels)
+                loaded_pixels = list(bpy.data.images.load(filepath, check_existing=False).pixels)
                 # image_pixels.append(loaded_pixels[:])
                 image_pixels.append([loaded_pixels[ipx:ipx+4] for ipx in range(0, len(loaded_pixels), 4)])
 
-            # Create final image pixels by loopin all image parts pixels
-            for i in range(len(image_pixels)):
-                for x in range(part_width):
-                    for y in range(part_height):
-                        # TODO: Not sure if this ordering pixels properly to final image. Output is mess still.
-                        px_index = (x + y * part_width) + (i * (part_width * part_height))
-                        # final_image_pixels[px_index] = image_pixels[i][y]   
-                        final_image_pixels.append(image_pixels[i][y])         
+            # # Create final image pixels by loopin all image parts pixels
+            # for i in range(len(image_pixels)):
+            #     for x in range(part_width):
+            #         for y in range(part_height):                        
+            #             px_part_index = x + y * part_width
+            #             px_final_index = px_part_index + (i * part_pixel_count)
+            #             final_image_pixels[px_final_index] = image_pixels[i][px_part_index]
+            #             # final_image_pixels.append(image_pixels[i][y])     
+
+            # # Create final image pixels by loopin all image parts pixels
+            for i in range(parts_count):
+                row_count = 0
+                for row in range(part_height):                    
+                    part_switch = -1           
+                    col_count = -1                    
+                    for col in range(final_image_width):
+                        if col % part_width == 0:
+                            part_switch += 1
+                            col_count = 0
+                        if i == 0:
+                            grp = i + part_switch
+                        else:
+                            grp = (i * parts_count) + part_switch
+                        
+                        final_image_pixels.append(image_pixels[grp][row_count*part_width + col_count])
+                        col_count += 1
+                    row_count += 1
 
             # Flatten needed levels from array
-            # final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
+            final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
 
             # DEBUG: Create text file from data
             # for line in final_image_pixels:
-            #     print(line, file=open("D:\\" + bl_info['name'] + "_Final_Image_Pixels.txt", "a"))
-
+            #     print(line, file=open("D:\\" + bl_info['name'] + "_Pixels.txt", "a"))
+          
             # final_image_pixels = np.array(final_image_pixels)
 
         # Check if there is enoug pixel images in array
@@ -254,7 +275,7 @@ class RF_Utils():
                 output_image = bpy.data.images.new(final_image_name, alpha=True, width=final_image_width, height=final_image_height)
                 output_image.alpha_mode = 'STRAIGHT'
                 # output_image.pixels = bytes([int(pix*255) for pix in final_image_pixels])
-                # output_image.pixels = final_image_pixels.ravel()
+                # output_image.pixels = final_image_pixels.ravel()                
                 output_image.pixels = final_image_pixels
                 output_image.filepath_raw = final_image_filepath
                 output_image.file_format = scene.render.image_settings.file_format
