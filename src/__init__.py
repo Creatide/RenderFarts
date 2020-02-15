@@ -20,7 +20,7 @@ bl_info = {
     "author" : "Sakari Niittymaa",
     "description" : "Render image in parts.",
     "blender" : (2, 80, 0),
-    "version" : (0, 0, 5),
+    "version" : (0, 0, 6),
     "location" : "Properties > Render > RenderFarts",
     "warning" : "",
     "category" : "Render"
@@ -178,6 +178,10 @@ class RF_Utils():
 
         scene = context.scene
         rndr = scene.render
+
+        if scene.render_settings.crop_border is False or scene.render_settings.parts_count % 2 != 0:
+            RF_Utils.show_message_box("The requirements for the merge process are not met", "Unable to Start Merge Process", "ERROR")
+            return False
         
         # Refresh and get all rendered images from list
         RF_Utils.refresh_render_list(scene)
@@ -191,6 +195,8 @@ class RF_Utils():
         # Read all images to array of images in pixels
         if rendered_images:
 
+            RF_Utils.show_message_box("It may take some time to merge the images and Blender will be frozen for the duration of the process...", "Merge Process Started", "ERROR")
+
             # Render settings
             final_image_name = 'FINAL_EPIC_' + scene.render_settings.filename_prefix + rndr.file_extension
             final_image_filepath = os.path.join(scene.render_settings.render_folder, final_image_name)
@@ -199,14 +205,6 @@ class RF_Utils():
             final_image_height = int(rndr.resolution_y * final_resolution_multiplier)
             part_width = int(round(final_image_width / parts_count))
             part_height = int(round(final_image_height / parts_count))
-
-            image_pixel_count = int(final_image_width * final_image_height)
-            part_pixel_count = int(image_pixel_count / total_parts_count)
-
-            # Empty arrays for every pixel
-            # final_image_pixels = [None] * part_pixel_count * total_parts_count         
-            final_image_pixels = []       
-            image_pixels = []        
 
             # Parse out numbers from names
             # name_numbers = []
@@ -220,75 +218,63 @@ class RF_Utils():
                 for x in range(parts_count):
                     rendered_images_ordered.append(rendered_images[(y-1)+(x*parts_count)])
 
-            # rendered_images_ordered.reverse()
-
             # Get all pixels from image parts
+            part_pixels = []  
             for image in rendered_images_ordered:
                 filepath = os.path.join(scene.render_settings.render_folder, image)
                 filepath = os.path.realpath(bpy.path.abspath(filepath))
                 loaded_pixels = list(bpy.data.images.load(filepath, check_existing=False).pixels)
-                # image_pixels.append(loaded_pixels[:])
-                image_pixels.append([loaded_pixels[ipx:ipx+4] for ipx in range(0, len(loaded_pixels), 4)])
+                part_pixels.append([loaded_pixels[ipx:ipx+4] for ipx in range(0, len(loaded_pixels), 4)])
 
-            # # Create final image pixels by loopin all image parts pixels
-            # for i in range(len(image_pixels)):
-            #     for x in range(part_width):
-            #         for y in range(part_height):                        
-            #             px_part_index = x + y * part_width
-            #             px_final_index = px_part_index + (i * part_pixel_count)
-            #             final_image_pixels[px_final_index] = image_pixels[i][px_part_index]
-            #             # final_image_pixels.append(image_pixels[i][y])     
+            try:
+                # Create final pixel array by loopin all image parts pixels
+                # https://stackoverflow.com/q/60188880/1629596
+                final_image_pixels = []
+                for i in range(parts_count, 0, -1):
+                    for row in range(part_height):    
+                        part_switch = -1           
+                        px_counter = -1            
+                        for col in range(final_image_width):
+                            if col % part_width == 0:
+                                part_switch += 1
+                                px_counter = 0
+                            if i-1 == 0:
+                                px_arr = i-1 + part_switch
+                            else:
+                                px_arr = ((i-1) * parts_count) + part_switch
+                            target_pixel = row * part_width + px_counter
+                            final_image_pixels.append(part_pixels[px_arr][target_pixel])
+                            px_counter += 1                        
+            except Exception as e:
+                excepName = type(e).__name__
+                RF_Utils.show_message_box("Cannot merge images properly: " + excepName, "Merge Failed", "ERROR")
+                print(e)
 
-            # # Create final image pixels by loopin all image parts pixels
-            for i in range(parts_count):
-                row_count = 0
-                for row in range(part_height):                    
-                    part_switch = -1           
-                    col_count = -1                    
-                    for col in range(final_image_width):
-                        if col % part_width == 0:
-                            part_switch += 1
-                            col_count = 0
-                        if i == 0:
-                            grp = i + part_switch
-                        else:
-                            grp = (i * parts_count) + part_switch
-                        
-                        final_image_pixels.append(image_pixels[grp][row_count*part_width + col_count])
-                        col_count += 1
-                    row_count += 1
-
-            # Flatten needed levels from array
             final_image_pixels = RF_Utils.flat_list(final_image_pixels, 1)
 
             # DEBUG: Create text file from data
             # for line in final_image_pixels:
             #     print(line, file=open("D:\\" + bl_info['name'] + "_Pixels.txt", "a"))
-          
-            # final_image_pixels = np.array(final_image_pixels)
+        
+            if len(final_image_pixels) == final_image_width * final_image_height * 4:
 
-        # Check if there is enoug pixel images in array
-        # if len(final_image_pixels) == image_pixel_count or len(final_image_pixels) == image_pixel_count * 4:
+                try:
+                    # Save output image
+                    output_image = bpy.data.images.new(final_image_name, alpha=True, width=final_image_width, height=final_image_height)
+                    output_image.alpha_mode = 'STRAIGHT'          
+                    output_image.pixels = final_image_pixels
+                    output_image.filepath_raw = final_image_filepath
+                    output_image.file_format = scene.render.image_settings.file_format
+                    output_image.save()          
 
-            try:
-                # Save output image
-                output_image = bpy.data.images.new(final_image_name, alpha=True, width=final_image_width, height=final_image_height)
-                output_image.alpha_mode = 'STRAIGHT'
-                # output_image.pixels = bytes([int(pix*255) for pix in final_image_pixels])
-                # output_image.pixels = final_image_pixels.ravel()                
-                output_image.pixels = final_image_pixels
-                output_image.filepath_raw = final_image_filepath
-                output_image.file_format = scene.render.image_settings.file_format
-                output_image.save()          
+                    # Open folder when merge complete
+                    path = os.path.realpath(bpy.path.abspath(scene.render_settings.render_folder))
+                    webbrowser.open('file:///' + path)
 
-                # Open folder when merge complete
-                path = os.path.realpath(bpy.path.abspath(scene.render_settings.render_folder))
-                webbrowser.open('file:///' + path)
-
-            except Exception as e:
-                excepName = type(e).__name__
-                RF_Utils.show_message_box("Cannot merge images properly: " + excepName, "Merge Failed", "ERROR")
-                print(e)
+                except Exception as e:
+                    excepName = type(e).__name__
+                    RF_Utils.show_message_box("Cannot merge images properly: " + excepName, "Merge Failed", "ERROR")
+                    print(e)
 
     # Show pop-up message window for user
     def show_message_box(message = "", title = "Message", icon = 'INFO'):
@@ -303,14 +289,14 @@ class RF_Utils():
 class RF_PROP_RenderSettings (PropertyGroup):
     render_folder: StringProperty(
         name="Render Folder",
-        description="Choose a Output Folder For " + bl_info['name'],
+        description="Choose a Output Folder for " + bl_info['name'],
         default="//",
         maxlen=1024,
         subtype='DIR_PATH'
     )
     filename_prefix: StringProperty(
         name="Filename Prefix",
-        description="Identification Prefix String for " + bl_info['name'] + " Filename",
+        description="Identification prefix string for " + bl_info['name'] + " filename",
         default="Fart"
     )
     parts_count: IntProperty(
@@ -326,7 +312,7 @@ class RF_PROP_RenderSettings (PropertyGroup):
     )
     total_parts_count: IntProperty(
         name="Total Parts Count",
-        description="Total Parts Count (e.g. 4 x 4 = 16)",
+        description="Total parts count (e.g. 4 x 4 = 16)",
         default=0,
         min=1
     )
@@ -337,13 +323,13 @@ class RF_PROP_RenderSettings (PropertyGroup):
     )
     overwrite_files: BoolProperty(
         name="Overwrite Images",
-        description="Overwrite Exist Image Files",
+        description="Overwrite existing image files",
         default=False
     )    
     show_render_window: BoolProperty(
         name="Show Render Window",
-        description="Show Render Window While Rendering",
-        default=True
+        description="Show render window while rendering",
+        default=False
     )
     stop_rendering: BoolProperty(
         name="Rendering in Progress",
@@ -508,12 +494,12 @@ class RF_OT_StartRender(Operator):
 class RF_OT_StopRender(Operator):
     bl_label = "Stop Rendering"
     bl_idname = "rp.stop_render"
-    bl_description = "Stop the Rendering Process"
+    bl_description = "Stop the rendering process"
 
     # Disable/enable button
     @classmethod
     def poll(self, context):
-        return context.scene.render_settings.all_parts_rendered is False and context.scene.render_settings.rendered_parts_count > 0
+        return context.scene.render_settings.rendered_parts_count > 0
     
     def execute(self, context):
         scene = context.scene
@@ -528,7 +514,7 @@ class RF_OT_StopRender(Operator):
 class RF_OT_RefreshList(Operator):
     bl_label = "Refresh List"
     bl_idname = "rp.refresh_list"
-    bl_description = "Refresh Rendering List"
+    bl_description = "Refresh rendering list"
     def execute(self, context):
         print(self.bl_label)
         scene = context.scene
@@ -541,7 +527,7 @@ class RF_OT_RefreshList(Operator):
 class RF_OT_OpenRenderFolder(Operator):
     bl_label = "Open Folder"
     bl_idname = "rp.open_render_folder"
-    bl_description = "Open Render Folder"
+    bl_description = "Open render folder"
     def execute(self, context):
         scene = context.scene
         print(self.bl_label + ': ' + scene.render_settings.render_folder)
@@ -557,7 +543,7 @@ class RF_OT_OpenRenderFolder(Operator):
 class RF_OT_ResetBorder(Operator):
     bl_label = "Reset Render Border"
     bl_idname = "rp.reset_border"
-    bl_description = "Reset Render Border to the Current Camera Resolution"
+    bl_description = "Reset Render Border to the current camera resolution"
     def execute(self, context):
         print(self.bl_label)
         scene = context.scene
@@ -574,14 +560,12 @@ class RF_OT_ResetBorder(Operator):
 class RF_OT_MergeImages(Operator):
     bl_label = "Merge Images"
     bl_idname = "rp.merge_images"
-    bl_description = "Merge Images to One Image After ALL Parts is Rendered. Works only when images not rendered with Crop to Render Region feature"
+    bl_description = "Requirements: 1. ALL parts must be rendered.\n2. Rendered with \"Crop to Render Region\" turned ON.\n3. Even numbers in the image size\n4. Even number in the \"Parts Count\""
 
-    '''
     # Disable button for cropped version because it's not work properly yet
     @classmethod
     def poll(self, context):
-        return context.scene.render_settings.all_parts_rendered is True
-    '''
+        return context.scene.render_settings.crop_border is True
     
     def execute(self, context):
         scene = context.scene
@@ -649,15 +633,13 @@ class RF_PT_Panel (Panel):
         box.operator("rp.reset_border", icon="SELECT_SET")
         
         # Merge Images
-        '''
         row = layout.row()
         #TODO: Merge images feature not work properly
-        row.label(text="Finalize Image (EXPERIMENTAL):")
+        row.label(text="Finalize Image:")
         row = layout.row()
         box = row.box()
         row.scale_y = 1.5
         box.operator("rp.merge_images", icon="FILE_IMAGE")
-        '''
         
         row = layout.row()
         row.alignment = 'RIGHT'
