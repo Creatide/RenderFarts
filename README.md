@@ -37,7 +37,7 @@ Just remember to use the same blend file with the same settings and the same fol
 ### Merge Rendered Image
 
 <p align="center">
-  <img src="https://imgur.com/a/lVLVvy6" width="100%" title="Merge Rendered Images">
+  <img src="https://imgur.com/a/lVLVvy6.gif" width="100%" title="Merge Rendered Images">
 </p>
 
 This feature is like butter on bread. Normally you merge images in some 3rd party apps like Photoshop or Gimp but now you can just press the merge button on Render Farts and it will merge pieces for your masterpiece. Just remember that for huge images it can take some time and freeze Blender for a while. 
