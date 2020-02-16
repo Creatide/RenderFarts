@@ -19,7 +19,7 @@ Why it's called **RenderFarts**? The very first prototype was called **RenderPar
 ### Stop and Continue Rendering
 
 <p align="center">
-  <img src="https://i.imgur.com/OjVgSkv.gif" width="100%" title="RenderFarts Logo">
+  <img src="https://i.imgur.com/OjVgSkv.gif" width="100%" title="Stop and Continue Rendering">
 </p>
 
 This was mainly the reason why I created RenderFarts add-on. It saves tiles to separate files so you just continue from there where you left whenever you want. Just remember to use the exact same file and rendering location and you'll be fine.
@@ -27,18 +27,26 @@ This was mainly the reason why I created RenderFarts add-on. It saves tiles to s
 ### Render With Multiple Computers
 
 <p align="center">
-  <img src="https://i.imgur.com/ktHGjhE.gif" width="100%" title="RenderFarts Logo">
+  <img src="https://i.imgur.com/ktHGjhE.gif" width="100%" title="Render Multiple Computers">
 </p>
 
 The second best reason for me to use RenderFart is being able to render using multiple computers. I've used some render farms and managers, but many of them are a hassle to set up for simple still images for personal use. For animations and bigger projects, those are all wonderful choices.
 
 Just remember to use the same blend file with the same settings and the same folder location where each of your rendering machines have access. Then you press render and grab a coffee (and/or beer).
 
+### Merge Rendered Image
+
+<p align="center">
+  <img src="https://imgur.com/a/lVLVvy6" width="100%" title="Merge Rendered Images">
+</p>
+
+This feature is like butter on bread. Normally you merge images in some 3rd party apps like Photoshop or Gimp but now you can just press the merge button on Render Farts and it will merge pieces for your masterpiece. Just remember that for huge images it can take some time and freeze Blender for a while. 
+
 ## Feature Ideas
 
 Here are some feature ideas that could be created to make this addon better. If you're a developer and have got some ninja moves, just fork and be a master Jedi.
 
-- **Merge rendered parts into the final image inside Blender.** I've already started this on the code side, but the merging function does not work properly yet... [A feature I started working on: `def merge_image_parts(context):`](https://github.com/Creatide/RenderFarts/blob/aa153e8641580b9110c6dc698bfc4a093e6bb108/src/__init__.py#L175). There is also [a post about this](https://blender.stackexchange.com/questions/166285/how-to-merge-external-images-together-in-script) problem initiated by me in https://blender.stackexchange.com/.
+[x] Merge rendered parts into the final image inside Blender.
 
 ## Installation
 
