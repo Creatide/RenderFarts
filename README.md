@@ -46,7 +46,7 @@ This feature is like butter on bread. Normally you merge images in some 3rd part
 
 Here are some feature ideas that could be created to make this addon better. If you're a developer and have got some ninja moves, just fork and be a master Jedi.
 
-[x] Merge rendered parts into the final image inside Blender.
+* [x] Merge rendered parts into the final image inside Blender.
 
 ## Installation
 
