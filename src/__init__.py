@@ -179,7 +179,7 @@ class RF_Utils():
         scene = context.scene
         rndr = scene.render
 
-        if scene.render_settings.crop_border is False or scene.render_settings.parts_count % 2 != 0:
+        if scene.render_settings.all_parts_rendered is False or scene.render_settings.crop_border is False or scene.render_settings.parts_count % 2 != 0:
             RF_Utils.show_message_box("The requirements for the merge process are not met", "Unable to Start Merge Process", "ERROR")
             return False
         
@@ -560,7 +560,7 @@ class RF_OT_ResetBorder(Operator):
 class RF_OT_MergeImages(Operator):
     bl_label = "Merge Images"
     bl_idname = "rp.merge_images"
-    bl_description = "Requirements: 1. ALL parts must be rendered.\n2. Rendered with \"Crop to Render Region\" turned ON.\n3. Even numbers in the image size\n4. Even number in the \"Parts Count\""
+    bl_description = "Requirements: \n1. ALL parts must be rendered.\n2. Rendered with \"Crop to Render Region\" turned ON.\n3. Even numbers in the image size\n4. Even number in the \"Parts Count\""
 
     # Disable button for cropped version because it's not work properly yet
     @classmethod
