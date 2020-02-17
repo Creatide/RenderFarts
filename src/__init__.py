@@ -114,8 +114,8 @@ class RF_Utils():
                 if (file.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))):
                     if file_extension is not True:
                         # Remove file extension if needed
-                        render_files.append(os.path.splitext(os.path.basename(file))[0])
-                    else:
+                        render_files.append(os.path.splitext(os.path.basename(file))[0])                        
+                    else:                        
                         render_files.append(file)
         return render_files
 
@@ -135,7 +135,7 @@ class RF_Utils():
         scene.render_settings.rendered_parts_count = len(render_files)
         
         # Check if all parts rendered
-        if (len(render_files) == scene.render_settings.total_parts_count):
+        if (len(scene.render_list) == scene.render_settings.total_parts_count):
             scene.render_settings.all_parts_rendered = True
         else:
             scene.render_settings.all_parts_rendered = False
@@ -178,13 +178,13 @@ class RF_Utils():
 
         scene = context.scene
         rndr = scene.render
+        RF_Utils.refresh_render_list(scene)
 
         if scene.render_settings.all_parts_rendered is False or scene.render_settings.crop_border is False or scene.render_settings.parts_count % 2 != 0:
             RF_Utils.show_message_box("The requirements for the merge process are not met", "Unable to Start Merge Process", "ERROR")
             return False
         
-        # Refresh and get all rendered images from list
-        RF_Utils.refresh_render_list(scene)
+        # Get all rendered images from list        
         rendered_images = []
         for item in scene.render_list:
             rendered_images.append(item.image_name)
